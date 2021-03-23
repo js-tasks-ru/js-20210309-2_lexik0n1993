@@ -4,5 +4,15 @@
  * @returns {function} - function-getter which allow get value from object by set path
  */
 export function createGetter(path) {
+  const props = path.split('.');
 
+  return (obj) => {
+    return props.reduce((acc, current) => {
+      if (acc && acc[current]) {
+        return acc[current];
+      }
+
+      return undefined;
+    }, obj);
+  };
 }
