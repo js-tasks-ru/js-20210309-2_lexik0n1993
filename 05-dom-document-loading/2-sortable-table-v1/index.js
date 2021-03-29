@@ -1,8 +1,19 @@
 export default class SortableTable {
-  constructor(header, data) {
+  imgDefaultTemplate = (data = []) => {
+    return `
+      <div class="sortable-table__cell">
+        <img class="sortable-table-image" alt="Image" src="${data[0]?.url}">
+      </div>
+    `
+  };
+
+  constructor(header = [], { data = [] }) {
     this.headerData = header;
-    this.data = data.data;
-    this.getImgCell = this.headerData[0].template;
+    this.data = data;
+    this.headerTitles = this.headerData.map(item => item.id);
+    this.getImgCell = this.headerTitles.find(item => item === 'images') &&
+                      this.headerTitles.find(item => item === 'images').template ||
+                      this.imgDefaultTemplate;
     
     this.render();
   }
@@ -14,16 +25,17 @@ export default class SortableTable {
       <div data-element="productsContainer" class="products-list__container">
         <div class="sortable-table">
           <div data-element="header" class="sortable-table__header sortable-table__row">
+            ${this.getHeader()}
           </div>
-          <div data-element="body" class="sortable-table__body"></div>
+          <div data-element="body" class="sortable-table__body">
+            ${this.getBody(this.data)}
+          </div>
         </div>
       </div>
     `;
 
     this.element = element.firstElementChild;
     this.subElements = this.getSubElements(this.element);
-    this.buildHeader();
-    this.buildBody(this.data);
   }
 
   getSubElements(element) {
@@ -37,7 +49,11 @@ export default class SortableTable {
   }
 
   buildHeader() {
-    this.subElements.header.innerHTML = this.headerData.map(({
+    this.subElements.header.innerHTML = this.getHeader();
+  }
+
+  getHeader() {
+    return this.headerData.map(({
       id,
       title,
       sortable
@@ -45,25 +61,38 @@ export default class SortableTable {
       <div class="sortable-table__cell" data-id="${id}" data-sortable="${sortable}" data-order>
         <span>${title}</span>
       </div>
-    `).join(``);
+    `).join(``)
   }
 
   buildBody(data) {
-    this.subElements.body.innerHTML = data.map(({
-      id,
-      images,
-      title,
-      quantity,
-      price,
-      sales
-    }) => `
-      <a href="/products/${id}" class="sortable-table__row">
-        ${this.getImgCell ? this.getImgCell(images) : ``}
-        ${[title, quantity, price, sales].map(item => `
-          ${item ? `<div class="sortable-table__cell">${item}</div>` : ``}
-        `).join(``)}
-      </a>
-    `).join(``);
+    this.subElements.body.innerHTML = this.getBody(data);
+  }
+
+  getBody(data) {
+    return data.map(dataItem => {
+      const {
+        id,
+        images = []
+      } = dataItem;
+
+      return `
+        <a href="/products/${id}" class="sortable-table__row">
+          ${this.headerTitles
+            .map(headerTitle => {
+              if (headerTitle === 'images') {
+                return this.getImgCell(images);
+              } else {
+                const cellContent = dataItem[headerTitle] || ``;
+                
+                return `
+                  <div class="sortable-table__cell">${cellContent}</div>
+                `;
+              } 
+            })
+            .join(``)}
+        </a>
+      `;
+    }).join(``);
   }
 
   buildArrow() {
@@ -89,8 +118,8 @@ export default class SortableTable {
         ) :
         (firstEl, secondEl) => (
           order === 'desc' ?
-          compareStrings(secondEl[field], firstEl[field]) :
-          compareStrings(firstEl[field], secondEl[field])
+          this.compareStrings(secondEl[field], firstEl[field]) :
+          this.compareStrings(firstEl[field], secondEl[field])
         )
     );
 
@@ -109,6 +138,15 @@ export default class SortableTable {
     sortableItem.dataset.order = order;
   }
 
+  compareStrings(a, b) {
+    const locales = ['ru-u-kf-upper', 'en-u-kf-upper'];
+    const options = {
+      sensitivity: 'variant'
+    };
+  
+    return a.localeCompare(b, locales, options);
+  }
+
   remove() {
     this.element.remove();
   }
@@ -116,13 +154,4 @@ export default class SortableTable {
   destroy() {
     this.remove();
   }
-}
-
-function compareStrings(a, b) {
-  const locales = ['ru-u-kf-upper', 'en-u-kf-upper'];
-  const options = {
-    sensitivity: 'variant'
-  };
-
-  return a.localeCompare(b, locales, options);
 }

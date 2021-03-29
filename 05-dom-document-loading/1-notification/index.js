@@ -24,8 +24,8 @@ export default class NotificationMessage {
       <div class="notification ${this.type}" style="--value:${this.duration / 1000}s">
         <div class="timer"></div>
         <div class="inner-wrapper">
-          <div class="notification-header">${this.type}</div>
-          <div class="notification-body">
+          <div class="notification-header" data-element="header">${this.type}</div>
+          <div class="notification-body" data-element="body">
             ${this.message}
           </div>
         </div>
@@ -34,16 +34,21 @@ export default class NotificationMessage {
 
     this.element = element.firstElementChild;
     NotificationMessage.instance = this;
-    this.getSubElements();
+    this.subElements = this.getSubElements(this.element);
   }
 
-  getSubElements() {
-    this.header = this.element.querySelector('.notification-header');
-    this.body = this.element.querySelector('.notification-body');
+  getSubElements(element) {
+    const elements = element.querySelectorAll('[data-element]');
+
+    return [...elements].reduce((accum, subElement) => {
+      accum[subElement.dataset.element] = subElement;
+
+      return accum;
+    }, {});
   }
 
   show(container = document.body) {
-    container.appendChild(this.element);
+    container.append(this.element);
     this.timer = setTimeout(this.destroy.bind(this), this.duration);
   }
 
