@@ -3,16 +3,13 @@ export default class NotificationMessage {
     duration = 2000,
     type = 'success'
   } = {}) {
+    if (NotificationMessage.instance) {
+      NotificationMessage.instance.remove();
+    }
+
     this.message = message;
     this.duration = duration;
-    this.type = type;
-
-    if (NotificationMessage.instance) {
-      this.element = NotificationMessage.instance.element;
-
-      this.destroy();
-      NotificationMessage.instance = null;
-    }
+    this.type = type;   
     
     this.render();
   }
@@ -34,22 +31,12 @@ export default class NotificationMessage {
 
     this.element = element.firstElementChild;
     NotificationMessage.instance = this;
-    this.subElements = this.getSubElements(this.element);
-  }
-
-  getSubElements(element) {
-    const elements = element.querySelectorAll('[data-element]');
-
-    return [...elements].reduce((accum, subElement) => {
-      accum[subElement.dataset.element] = subElement;
-
-      return accum;
-    }, {});
   }
 
   show(container = document.body) {
     container.append(this.element);
-    this.timer = setTimeout(this.destroy.bind(this), this.duration);
+
+    this.timer = setTimeout(this.remove.bind(this), this.duration);
   }
 
   remove() {
@@ -58,6 +45,7 @@ export default class NotificationMessage {
 
   destroy() {
     this.remove();
+    NotificationMessage.instance = null;
     clearTimeout(this.timer);
   }
 
