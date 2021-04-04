@@ -23,7 +23,7 @@ export default class SortableTable {
   constructor(headerConfig = [], {
     data = [],
     startSortSettings = {
-      id: 'title',
+      id: headerConfig.find(item => item.sortable).id,
       order: 'asc'
     },
     userSortSettings = {
@@ -193,7 +193,7 @@ export default class SortableTable {
   }
 
   remove() {
-    this.element.remove()
+    this.element.remove();
   }
 
   destroy() {
