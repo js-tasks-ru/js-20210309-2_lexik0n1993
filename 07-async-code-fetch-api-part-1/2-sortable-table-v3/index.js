@@ -25,7 +25,7 @@ export default class SortableTable {
 
       const { id, order } = this.sorted;
 
-      if (true) {
+      if (this.serverSideSorting) {
         this.sortOnServer(id, order);
       } else {
         this.updateTable(id, order);
@@ -67,12 +67,11 @@ export default class SortableTable {
     this.headersConfig = headersConfig;
     this.data = data;
     this.url = url ? new URL(url, BACKEND_URL) : '';
-    this.serverSideSorting = true;
+    this.serverSideSorting = serverSideSorting;
     this.sorted = sorted;
     this.userSortSettings = userSortSettings;
     
     this.render();
-    this.addEventListeners();
   }
 
   get getTable() {
@@ -185,6 +184,8 @@ export default class SortableTable {
     } else {
       this.checkDataIsFullfilled();
     }
+
+    this.addEventListeners();
   }
 
   setSearchParams(id, order) {
@@ -299,7 +300,6 @@ export default class SortableTable {
   }
 
   sortOnServer(id, order) {
-    console.warn(`I'm sortOnServer method!`);
     this.resetSortParams();
     this.data = [];
     this.loadData(id, order);
