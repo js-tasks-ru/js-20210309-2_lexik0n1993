@@ -25,7 +25,7 @@ export default class SortableTable {
 
       const { id, order } = this.sorted;
 
-      if (this.serverSideSorting) {
+      if (true) {
         this.sortOnServer(id, order);
       } else {
         this.updateTable(id, order);
@@ -299,6 +299,7 @@ export default class SortableTable {
   }
 
   sortOnServer(id, order) {
+    console.warn(`I'm sortOnServer method!`);
     this.resetSortParams();
     this.data = [];
     this.loadData(id, order);
