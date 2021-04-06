@@ -23,10 +23,12 @@ export default class SortableTable {
       this.sorted.order = this.getOrder;
       this.sorted.id = target.dataset.id;
 
-      if (this.isLoadingFromServer()) {
-        this.sortOnServer();
+      const { id, order } = this.sorted;
+
+      if (this.serverSideSorting) {
+        this.sortOnServer(id, order);
       } else {
-        this.updateTable();
+        this.updateTable(id, order);
       }      
     }
   }
@@ -40,13 +42,16 @@ export default class SortableTable {
     const bottom = document.documentElement.offsetHeight - document.documentElement.clientHeight - this.scrollOffset;
 
     if (scroll > bottom && !this.loading) {
-      this.loadData();
+      const { id, order } = this.sorted;
+
+      this.loadData(id, order);
     }
   }
 
   constructor(headersConfig, {
     data = [],
     url = '',
+    serverSideSorting = true,
     sorted = {
       id: headersConfig.find(item => item.sortable).id,
       order: 'asc',
@@ -62,6 +67,7 @@ export default class SortableTable {
     this.headersConfig = headersConfig;
     this.data = data;
     this.url = url ? new URL(url, BACKEND_URL) : '';
+    this.serverSideSorting = true;
     this.sorted = sorted;
     this.userSortSettings = userSortSettings;
     
@@ -174,17 +180,15 @@ export default class SortableTable {
 
     this.subElements = this.getSubElements();
 
-    if (this.isLoadingFromServer()) {
-      await this.loadData();
+    if (this.serverSideSorting) {
+      await this.loadData(this.sorted.id, this.sorted.order);
     } else {
       this.checkDataIsFullfilled();
     }
   }
 
-  setSearchParams() {
+  setSearchParams(id, order) {
     const {
-      id,
-      order,
       startIndex,
       endIndex
     } = this.sorted;
@@ -205,20 +209,16 @@ export default class SortableTable {
     this.subElements.loading.style.display = 'none';
   }
 
-  async loadData() {
+  async loadData(id, order) {
     this.startLoading();
 
-    this.setSearchParams();
+    this.setSearchParams(id, order);
 
     const response = await fetchJson(this.url);
 
-    if (this.data.length) {
-      this.data = [...this.data, ...response];
-    } else {
-      this.data = response;
-    }
+    this.data = [...this.data, ...response];
 
-    this.updateTable(true);
+    this.updateTable(id, order);
     this.checkDataIsFullfilled();
 
     this.sorted.startIndex = this.sorted.endIndex;
@@ -249,12 +249,10 @@ export default class SortableTable {
     this.subElements.emptyPlaceholder.style.display = 'none';
   }
 
-  updateTable(dataFromServer = false) {
-    const { id, order } = this.sorted;
-
+  updateTable(id, order, serverSideSorting = this.serverSideSorting) {
     this.updateHeader(id, order);
 
-    const sortedData = dataFromServer ? this.data : this.sortData(id, order);
+    const sortedData = serverSideSorting ? this.data : this.sortData(id, order);
 
     this.subElements.body.innerHTML = this.getBodyRows(sortedData);
   }
@@ -300,25 +298,19 @@ export default class SortableTable {
     });
   }
 
-  sortOnServer() {
-    console.error(`I'm sortOnServer method!`);
-
+  sortOnServer(id, order) {
     this.resetSortParams();
     this.data = [];
-    this.loadData();
+    this.loadData(id, order);
     this.stopScrollHandler = false;
   }
 
   addEventListeners() {
     this.subElements.header.addEventListener('pointerdown', this.headerClickHandler);
 
-    if (this.isLoadingFromServer()) {
+    if (this.serverSideSorting) {
       document.addEventListener('scroll', this.onScrollHandler);
     }  
-  }
-
-  isLoadingFromServer() {
-    return this.url !== '';
   }
 
   isItSortable(data) {
