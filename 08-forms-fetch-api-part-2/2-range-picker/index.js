@@ -140,20 +140,6 @@ export default class RangePicker {
         cell.classList.add('rangepicker__selected-between');
       }
     }
-
-    // if (from) {
-    //   const selectedFromElem = this.element.querySelector(`[data-value="${from.toISOString()}"]`);
-    //   if (selectedFromElem) {
-    //     selectedFromElem.closest('.rangepicker__cell').classList.add('rangepicker__selected-from');
-    //   }
-    // }
-
-    // if (to) {
-    //   const selectedToElem = this.element.querySelector(`[data-value="${to.toISOString()}"]`);
-    //   if (selectedToElem) {
-    //     selectedToElem.closest('.rangepicker__cell').classList.add('rangepicker__selected-to');
-    //   }
-    // }
   }
 
   renderCalendar(showDate) {
