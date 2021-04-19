@@ -14,8 +14,8 @@ export default class SortableTable {
   onWindowScroll = async() => {
     const { bottom } = this.element.getBoundingClientRect();
     const { id, order } = this.sorted;
-
-    if (bottom < document.documentElement.clientHeight && !this.loading && !this.sortLocally) {
+    
+    if (bottom < document.documentElement.clientHeight && !this.loading && !this.isSortLocally) {
       this.start = this.end;
       this.end = this.start + this.step;
 
@@ -68,7 +68,9 @@ export default class SortableTable {
     isSortLocally = false,
     step = 20,
     start = 1,
-    end = start + step
+    end = start + step,
+    from = new Date(),
+    to = new Date()
   } = {}) {
 
     this.headersConfig = headersConfig;
@@ -78,6 +80,8 @@ export default class SortableTable {
     this.step = step;
     this.start = start;
     this.end = end;
+    this.from = from;
+    this.to = to;
 
     this.render();
   }
@@ -99,11 +103,20 @@ export default class SortableTable {
     this.initEventListeners();
   }
 
-  async loadData(id, order, start = this.start, end = this.end) {
+  async loadData(
+    id = this.sorted.id,
+    order = this.sorted.order,
+    start = this.start,
+    end = this.end,
+    from = this.from,
+    to = this.to
+    ) {
     this.url.searchParams.set('_sort', id);
     this.url.searchParams.set('_order', order);
     this.url.searchParams.set('_start', start);
     this.url.searchParams.set('_end', end);
+    this.url.searchParams.set('from', from.toISOString());
+    this.url.searchParams.set('to', to.toISOString());
 
     this.element.classList.add('sortable-table_loading');
 
